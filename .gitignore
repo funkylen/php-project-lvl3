@@ -13,3 +13,7 @@ yarn-error.log
 /.idea
 /.vscode
 /database/database.sqlite
+/public/css
+/public/js
+/public/mix-manifest.json
+
