@@ -6,7 +6,7 @@
 
     <title>Laravel</title>
 
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/app.css', app()->environment('production')) }}">
 </head>
 <body>
 
@@ -25,6 +25,6 @@
 </main>
 
 
-<style src="{{ asset('js/app.js') }}"></style>
+<style src="{{ asset('js/app.js', app()->environment('production')) }}"></style>
 </body>
 </html>
