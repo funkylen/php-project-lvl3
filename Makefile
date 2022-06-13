@@ -32,3 +32,6 @@ lint:
 
 lint-fix:
 	composer phpcbf -- --standard=PSR12 app tests
+
+test-coverage:
+	composer exec --verbose phpunit tests -- --coverage-clover ./build/logs/clover.xml
