@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class UrlTest extends TestCase
+class UrlControllerTest extends TestCase
 {
     use RefreshDatabase;
 
