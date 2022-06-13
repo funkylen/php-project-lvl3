@@ -25,6 +25,8 @@ class UrlControllerTest extends TestCase
 
         $response = $this->post(route('urls.store'), $body);
 
+        $response->assertSessionHasNoErrors();
+
         $response->assertRedirect();
 
         $this->assertDatabaseHas('urls', [
