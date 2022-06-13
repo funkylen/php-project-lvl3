@@ -8,6 +8,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use DiDom\Document;
 
 class UrlController extends Controller
 {
@@ -110,10 +111,18 @@ class UrlController extends Controller
         try {
             $response = Http::get($url->name);
 
+            $document = new Document($response->body());
+
             $this->urlChecksTable->insert([
                 'url_id' => $id,
                 'status_code' => $response->status(),
                 'created_at' => now(),
+                'title' => optional($document->first('title'), fn ($node) => $node->text()),
+                'h1' => optional($document->first('h1'), fn ($node) => $node->text()),
+                'description' => optional(
+                    $document->first('meta[name="description"]'),
+                    fn ($node) => $node->attr('content')
+                ),
             ]);
         } catch (ConnectionException $exception) {
             flash($exception->getMessage())->error();

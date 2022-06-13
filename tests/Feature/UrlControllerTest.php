@@ -15,7 +15,17 @@ class UrlControllerTest extends TestCase
         parent::setUp();
 
         Http::fake([
-            'http://example.com' => Http::response(null, 200),
+            'http://example.com' => Http::response('
+            <html>
+                <head>
+                    <title>Title</title>
+                    <meta name="description" content="Description" />
+                </head>
+                <body>
+                    <h1>H1</h1>
+                </body>
+            </html>
+            ', 200),
         ]);
     }
 
@@ -27,7 +37,7 @@ class UrlControllerTest extends TestCase
 
     public function testStore(): void
     {
-        $urlName = 'https://example.com';
+        $urlName = 'http://example.com';
 
         $body = [
             'url' => ['name' => $urlName],
@@ -46,6 +56,9 @@ class UrlControllerTest extends TestCase
         $this->assertDatabaseHas('url_checks', [
             'url_id' => app('db')->table('urls')->first()->id,
             'status_code' => 200,
+            'h1' => 'H1',
+            'title' => 'Title',
+            'description' => 'Description',
         ]);
     }
 
@@ -77,6 +90,9 @@ class UrlControllerTest extends TestCase
         $this->assertDatabaseHas('url_checks', [
             'url_id' => $id,
             'status_code' => 200,
+            'h1' => 'H1',
+            'title' => 'Title',
+            'description' => 'Description',
         ]);
     }
 }
