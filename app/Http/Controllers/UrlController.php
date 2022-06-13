@@ -6,8 +6,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class UrlController extends Controller
 {
@@ -15,7 +13,7 @@ class UrlController extends Controller
 
     public function __construct()
     {
-        $this->table = DB::table('urls');
+        $this->table = app('db')->table('urls');
     }
 
     public function index(): View
@@ -27,7 +25,7 @@ class UrlController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validator = Validator::make(
+        $validator = app('validator')->make(
             $request->all(),
             [
                 'url.name' => 'required|url|max:255',
