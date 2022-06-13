@@ -9,16 +9,27 @@ use Illuminate\Http\Request;
 
 class UrlController extends Controller
 {
-    private Builder $table;
+    private Builder $urlsTable;
+    private Builder $urlChecksTable;
 
     public function __construct()
     {
-        $this->table = app('db')->table('urls');
+        $this->urlsTable = app('db')->table('urls');
+        $this->urlChecksTable = app('db')->table('url_checks');
     }
 
     public function index(): View
     {
-        $urls = $this->table->paginate();
+        $latestCheck = $this->urlChecksTable
+            ->latest()
+            ->limit(1);
+
+        $urls = $this->urlsTable
+            ->leftJoinSub($latestCheck, 'latest_check', function ($join) {
+                $join->on('urls.id', '=', 'latest_check.url_id');
+            })
+            ->select('urls.*', 'latest_check.created_at as latest_check_at')
+            ->paginate();
 
         return view('urls.index', compact('urls'));
     }
@@ -40,16 +51,23 @@ class UrlController extends Controller
         $parsedUrl = parse_url($request->url['name']);
         $name = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
 
-        $url = $this->table->where('name', $name)->first();
+        $url = $this->urlsTable->where('name', $name)->first();
 
         if ($url) {
             flash('Страница уже существует')->info();
             return redirect()->route('urls.show', ['url' => $url->id]);
         }
 
-        $id = $this->table->insertGetId([
+        $now = now();
+
+        $id = $this->urlsTable->insertGetId([
             'name' => $name,
-            'created_at' => now(),
+            'created_at' => $now,
+        ]);
+
+        $this->urlChecksTable->insert([
+            'url_id' => $id,
+            'created_at' => $now,
         ]);
 
         flash('Страница успешно добавлена')->info();
@@ -58,8 +76,19 @@ class UrlController extends Controller
 
     public function show($url): View
     {
-        $url = $this->table->find($url);
+        $url = $this->urlsTable->find($url);
+        $checks = $this->urlChecksTable->where('url_id', '=', $url->id)->latest()->get();
 
-        return view('urls.show', compact('url'));
+        return view('urls.show', compact('url', 'checks'));
+    }
+
+    public function check($id)
+    {
+        $this->urlChecksTable->insert([
+            'url_id' => $id,
+            'created_at' => now(),
+        ]);
+
+        return back();
     }
 }
