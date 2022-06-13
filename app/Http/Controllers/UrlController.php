@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class UrlController extends Controller
 {
@@ -20,15 +22,20 @@ class UrlController extends Controller
 
     public function index(): View
     {
-        $latestCheck = $this->urlChecksTable
-            ->latest()
-            ->limit(1);
+        $latestChecksQuery = $this->urlChecksTable
+            ->select(app('db')->raw('MAX(created_at) as latest_created_at, url_id, status_code'))
+            ->groupBy('url_id');
 
         $urls = $this->urlsTable
-            ->leftJoinSub($latestCheck, 'latest_check', function ($join) {
-                $join->on('urls.id', '=', 'latest_check.url_id');
-            })
-            ->select('urls.*', 'latest_check.created_at as latest_check_at')
+            ->joinSub($latestChecksQuery, 'latest_checks', 'urls.id', '=', 'latest_checks.url_id')
+            ->join('url_checks', 'latest_checks.url_id', '=', 'url_checks.url_id')
+            ->whereColumn('latest_checks.latest_created_at', '=', 'url_checks.created_at')
+            ->select(
+                'urls.*',
+                'latest_checks.latest_created_at as latest_check_created_at',
+                'latest_checks.status_code as latest_check_status_code'
+            )
+            ->orderBy('id')
             ->paginate();
 
         return view('urls.index', compact('urls'));
@@ -58,17 +65,12 @@ class UrlController extends Controller
             return redirect()->route('urls.show', ['url' => $url->id]);
         }
 
-        $now = now();
-
         $id = $this->urlsTable->insertGetId([
             'name' => $name,
-            'created_at' => $now,
+            'created_at' => now(),
         ]);
 
-        $this->urlChecksTable->insert([
-            'url_id' => $id,
-            'created_at' => $now,
-        ]);
+        $this->checkUrlById($id);
 
         flash('Страница успешно добавлена')->info();
         return redirect()->route('urls.show', ['url' => $id]);
@@ -76,19 +78,45 @@ class UrlController extends Controller
 
     public function show($url): View
     {
-        $url = $this->urlsTable->find($url);
+        $url = $this->findUrlById($url);
+
         $checks = $this->urlChecksTable->where('url_id', '=', $url->id)->latest()->get();
 
         return view('urls.show', compact('url', 'checks'));
     }
 
+    private function findUrlById($id)
+    {
+        $url = $this->urlsTable->find($id);
+
+        if (!$url) {
+            abort(404);
+        }
+
+        return $url;
+    }
+
     public function check($id)
     {
-        $this->urlChecksTable->insert([
-            'url_id' => $id,
-            'created_at' => now(),
-        ]);
+        $this->checkUrlById($id);
 
         return back();
+    }
+
+    private function checkUrlById($id)
+    {
+        $url = $this->findUrlById($id);
+
+        try {
+            $response = Http::get($url->name);
+
+            $this->urlChecksTable->insert([
+                'url_id' => $id,
+                'status_code' => $response->status(),
+                'created_at' => now(),
+            ]);
+        } catch (ConnectionException $exception) {
+            flash($exception->getMessage())->error();
+        }
     }
 }

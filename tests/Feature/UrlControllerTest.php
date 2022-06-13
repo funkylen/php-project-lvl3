@@ -3,11 +3,21 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class UrlControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Http::fake([
+            'http://example.com' => Http::response(null, 200),
+        ]);
+    }
 
     public function testIndex(): void
     {
@@ -35,6 +45,7 @@ class UrlControllerTest extends TestCase
 
         $this->assertDatabaseHas('url_checks', [
             'url_id' => app('db')->table('urls')->first()->id,
+            'status_code' => 200,
         ]);
     }
 
@@ -65,6 +76,7 @@ class UrlControllerTest extends TestCase
 
         $this->assertDatabaseHas('url_checks', [
             'url_id' => $id,
+            'status_code' => 200,
         ]);
     }
 }
