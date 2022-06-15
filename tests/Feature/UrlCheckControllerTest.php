@@ -28,7 +28,7 @@ class UrlCheckControllerTest extends TestCase
             'created_at' => now(),
         ]);
 
-        $response = $this->post(route('checks.store', ['url' => $id]));
+        $response = $this->post(route('urls.checks.store', ['url' => $id]));
 
         $response->assertSessionHasNoErrors();
 
