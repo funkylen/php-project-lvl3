@@ -18,5 +18,5 @@ Web app which check sites for availability (status code). App gets title, headin
 
 ## Installation 
 ```shell
-make setup # in folder with project
+make setup-and-start # in folder with project
 ```
