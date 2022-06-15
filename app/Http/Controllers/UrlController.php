@@ -4,40 +4,28 @@ namespace App\Http\Controllers;
 
 use App\Services\UrlCheckService;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class UrlController extends Controller
 {
-    private Builder $urlsTable;
-    private Builder $urlChecksTable;
-
-    public function __construct()
-    {
-        $this->urlsTable = app('db')->table('urls');
-        $this->urlChecksTable = app('db')->table('url_checks');
-    }
-
     public function index(): View
     {
-        $urls = $this->urlsTable
+        $urls = app('db')
+            ->table('urls')
             ->orderBy('id')
             ->paginate();
 
-        $urlsIds = collect($urls->items())->pluck('id');
+        $checks = collect($urls->items())->mapWithKeys(function ($url) {
+            $check = app('db')
+                ->table('url_checks')
+                ->where('url_id', $url->id)
+                ->latest()
+                ->select('url_id', 'created_at', 'status_code')
+                ->first();
 
-        $checks = $this->urlChecksTable
-            ->select(
-                app('db')
-                    ->raw(
-                        'MAX(created_at) as latest_created_at, url_id, status_code'
-                    )
-            )
-            ->whereIn('url_id', $urlsIds)
-            ->groupBy('url_id')
-            ->get()
-            ->keyBy('url_id');
+            return [$url->id => $check];
+        });
 
         return view('urls.index', compact('urls', 'checks'));
     }
@@ -59,14 +47,14 @@ class UrlController extends Controller
         $parsedUrl = parse_url($request->url['name']);
         $name = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
 
-        $url = $this->urlsTable->where('name', $name)->first();
+        $url = app('db')->table('urls')->where('name', $name)->first();
 
         if ($url) {
             flash('Страница уже существует')->info();
             return redirect()->route('urls.show', ['url' => $url->id]);
         }
 
-        $id = $this->urlsTable->insertGetId([
+        $id = app('db')->table('urls')->insertGetId([
             'name' => $name,
             'created_at' => now(),
         ]);
@@ -79,12 +67,13 @@ class UrlController extends Controller
 
     public function show($url): View
     {
-        $url = $this->urlsTable->find($url);
+        $url = app('db')->table('urls')->find($url);
 
         abort_unless($url, 404);
 
-        $checks = $this->urlChecksTable
-            ->where('url_id', '=', $url->id)
+        $checks = app('db')
+            ->table('url_checks')
+            ->where('url_id', $url->id)
             ->latest()
             ->get();
 

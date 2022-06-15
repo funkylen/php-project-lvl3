@@ -23,6 +23,24 @@ class UrlControllerTest extends TestCase
 
     public function testIndex(): void
     {
+        app('db')->table('urls')->insert([
+            'name' => 'http://example.com',
+            'created_at' => now(),
+        ]);
+
+        app('db')->table('url_checks')->insert([
+            [
+                'url_id' => 1,
+                'status_code' => 403,
+                'created_at' => now()->subDays(4),
+            ],
+            [
+                'url_id' => 1,
+                'status_code' => 200,
+                'created_at' => now()->subDays(2),
+            ],
+        ]);
+
         $response = $this->get(route('urls.index'));
         $response->assertOk();
     }
