@@ -53,7 +53,7 @@ class UrlController extends Controller
 
         if ($validator->fails()) {
             flash('Неккоректный URL.')->error();
-            return back();
+            return back()->withErrors($validator);
         }
 
         $parsedUrl = parse_url($request->url['name']);

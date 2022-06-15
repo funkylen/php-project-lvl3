@@ -54,6 +54,13 @@ class UrlControllerTest extends TestCase
         ]);
     }
 
+    public function testStoreWithEmptyName(): void
+    {
+        $response = $this->post(route('urls.store'));
+
+        $response->assertSessionHasErrors();
+    }
+
     public function testShow(): void
     {
         $id = app('db')->table('urls')->insertGetId([
