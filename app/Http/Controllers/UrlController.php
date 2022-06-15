@@ -16,7 +16,10 @@ class UrlController extends Controller
             ->orderBy('id')
             ->paginate();
 
-        $checks = collect($urls->items())->mapWithKeys(function ($url) {
+        /** @var array $urlsItems */
+        $urlsItems = $urls->items();
+
+        $checks = collect($urlsItems)->mapWithKeys(function ($url) {
             $check = app('db')
                 ->table('url_checks')
                 ->where('url_id', $url->id)
@@ -44,7 +47,7 @@ class UrlController extends Controller
             return back()->withErrors($validator);
         }
 
-        $parsedUrl = parse_url($request->url['name']);
+        $parsedUrl = parse_url($request->get('url')['name']);
         $name = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
 
         $url = app('db')->table('urls')->where('name', $name)->first();
@@ -65,7 +68,7 @@ class UrlController extends Controller
         return redirect()->route('urls.show', ['url' => $id]);
     }
 
-    public function show($url): View
+    public function show(int $url): View
     {
         $url = app('db')->table('urls')->find($url);
 

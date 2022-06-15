@@ -8,7 +8,7 @@ abstract class TestCase extends BaseTestCase
 {
     use CreatesApplication;
 
-    protected function getFixturePath($filename): string
+    protected function getFixturePath(string $filename): string
     {
         $pathParts = ['tests', 'Fixtures', $filename];
 

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 
 class UrlCheckService
 {
-    public function checkUrlById($id): void
+    public function checkUrlById(int $id): void
     {
         $url = app('db')->table('urls')->find($id);
 
