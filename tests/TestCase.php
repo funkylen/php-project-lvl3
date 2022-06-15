@@ -7,4 +7,11 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 abstract class TestCase extends BaseTestCase
 {
     use CreatesApplication;
+
+    protected function getFixturePath($filename): string
+    {
+        $pathParts = ['tests', 'Fixtures', $filename];
+
+        return base_path(implode(DIRECTORY_SEPARATOR, $pathParts));
+    }
 }

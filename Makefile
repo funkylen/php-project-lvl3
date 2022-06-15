@@ -1,13 +1,15 @@
 start:
 	php artisan serve --host 0.0.0.0
 
-setup:
+setup-local:
 	composer install
 	cp -n .env.example .env|| true
 	php artisan key:gen --ansi
 	touch database/database.sqlite
 	php artisan migrate
 	php artisan db:seed
+
+setup: setup-local start
 
 watch:
 	npm run watch

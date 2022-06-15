@@ -14,18 +14,10 @@ class UrlControllerTest extends TestCase
     {
         parent::setUp();
 
+        $body = file_get_contents($this->getFixturePath('example.html'));
+
         Http::fake([
-            'http://example.com' => Http::response('
-            <html>
-                <head>
-                    <title>Title</title>
-                    <meta name="description" content="Description" />
-                </head>
-                <body>
-                    <h1>H1</h1>
-                </body>
-            </html>
-            ', 200),
+            'http://example.com' => Http::response($body),
         ]);
     }
 
@@ -72,27 +64,5 @@ class UrlControllerTest extends TestCase
         $response = $this->get(route('urls.show', $id));
 
         $response->assertOk();
-    }
-
-    public function testUrlCheck(): void
-    {
-        $id = app('db')->table('urls')->insertGetId([
-            'name' => 'http://example.com',
-            'created_at' => now(),
-        ]);
-
-        $response = $this->post(route('urls.check', $id));
-
-        $response->assertSessionHasNoErrors();
-
-        $response->assertRedirect();
-
-        $this->assertDatabaseHas('url_checks', [
-            'url_id' => $id,
-            'status_code' => 200,
-            'h1' => 'H1',
-            'title' => 'Title',
-            'description' => 'Description',
-        ]);
     }
 }

@@ -23,7 +23,7 @@
 
     <h2 class="mt-5 mb-3">Проверки</h2>
 
-    <form class="mb-3" method="post" action="{{ route('urls.check', $url->id) }}">
+    <form class="mb-3" method="post" action="{{ route('checks.store', ['url' => $url->id]) }}">
         @csrf
         <input type="submit" class="btn btn-primary" value="Запустить проверку">
     </form>
