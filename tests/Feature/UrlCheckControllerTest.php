@@ -2,29 +2,23 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class UrlCheckControllerTest extends TestCase
 {
-    use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $body = file_get_contents($this->getFixturePath('example.html'));
-
-        Http::fake([
-            'http://example.com' => Http::response($body),
-        ]);
-    }
-
     public function testStore(): void
     {
+        $urlName = 'http://example.com';
+
+        $fakeResponseBody = file_get_contents($this->getFixturePath('example.html'));
+
+        Http::fake([
+            $urlName => Http::response($fakeResponseBody),
+        ]);
+
         $id = app('db')->table('urls')->insertGetId([
-            'name' => 'http://example.com',
+            'name' => $urlName,
             'created_at' => now(),
         ]);
 
