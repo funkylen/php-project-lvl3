@@ -6,5 +6,5 @@ use App\Http\Controllers\UrlController;
 
 Route::view('/', 'welcome')->name('home');
 
-Route::resource('/urls', UrlController::class)->only('index', 'store', 'show');
-Route::resource('/urls/{url}/checks', UrlCheckController::class)->only('store');
+Route::resource('urls', UrlController::class)->only('index', 'store', 'show');
+Route::resource('urls.checks', UrlCheckController::class)->only('store');
